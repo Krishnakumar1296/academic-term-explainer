@@ -1,0 +1,6 @@
+/* Global root reset */
+html, body, #root {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
