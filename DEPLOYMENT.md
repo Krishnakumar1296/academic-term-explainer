@@ -19,10 +19,11 @@ git push origin main
 2. Click **Add New...** → **Project**.
 3. Select and import your GitHub repository (`Demo1` or your repo name).
 
-### Step 3: Configure Project Settings
-- **Framework Preset**: Other / Create React App (detected automatically)
-- **Root Directory**: `./` (leave as default root)
-- **Build Command**: Automatically handled by `vercel.json` and root `package.json`
+### Step 3: Project Settings (Vercel Dashboard)
+- **Framework Preset**: Create React App (or Other)
+- **Root Directory**: `./` (leave as the project root)
+- **Build Command**: `npm --prefix client run build` *(pre-configured in `vercel.json`)*
+- **Output Directory**: `client/build` *(pre-configured in `vercel.json`)*
 
 ### Step 4: Add Environment Variables
 In the **Environment Variables** section, add your Gemini API key:
