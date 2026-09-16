@@ -407,6 +407,85 @@ function HistoryModal({ isOpen, onClose, history, onSelectHistory, onDeleteHisto
 }
 
 // ============================================================================
+// GEMINI API KEY SETTINGS MODAL
+// ============================================================================
+function SettingsModal({ isOpen, onClose, apiKey, onSaveKey, showToast }) {
+  const [inputKey, setInputKey] = useState(apiKey || "");
+
+  useEffect(() => {
+    setInputKey(apiKey || "");
+  }, [apiKey, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    onSaveKey(inputKey.trim());
+    showToast(inputKey.trim() ? "Custom Gemini API key saved!" : "Using default server key", "🔑");
+    onClose();
+  };
+
+  const handleClear = () => {
+    setInputKey("");
+    onSaveKey("");
+    showToast("Cleared custom key. Using default server key.", "🧹");
+    onClose();
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-dialog auth-card" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)" }}>
+            ⚙️ Gemini API Settings
+          </h3>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
+        </div>
+
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 16 }}>
+          The app uses the server's configured Google Gemini API key by default. If the shared model quota reaches its limit, you can supply your own free Gemini API key.
+        </p>
+
+        <form onSubmit={handleSave}>
+          <div className="auth-form-group">
+            <label>Custom Gemini API Key (Optional)</label>
+            <input
+              type="password"
+              className="auth-input"
+              placeholder="Paste your Gemini API key (e.g. AIzaSy...)"
+              value={inputKey}
+              onChange={(e) => setInputKey(e.target.value)}
+            />
+          </div>
+
+          <div style={{ marginBottom: 18 }}>
+            <a
+              href="https://aistudio.google.com/app/apikey"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "var(--brand-primary)", fontSize: 12.5, textDecoration: "none", fontWeight: 600 }}
+            >
+              Get a free API key at Google AI Studio ↗
+            </a>
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="submit" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>
+              Save Key
+            </button>
+            {apiKey && (
+              <button type="button" className="btn-ghost" onClick={handleClear} style={{ color: "var(--color-error)" }}>
+                Reset
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
 // LANDING PAGE COMPONENT
 // ============================================================================
 function LandingPage({ onLaunchExplainer, onOpenAuth, currentUser, onOpenHistory, historyCount }) {
@@ -608,6 +687,14 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [apiKey, setApiKey] = useState(() => {
+    try {
+      return localStorage.getItem("gemini_user_api_key") || "";
+    } catch {
+      return "";
+    }
+  });
 
   // Form State
   const [term, setTerm] = useState("");
@@ -677,6 +764,7 @@ export default function App() {
         grade: targetGrade,
         language,
         userId: effectiveUid,
+        apiKey: apiKey.trim() || undefined,
       });
 
       const explanation = res.data.result || "";
@@ -697,7 +785,12 @@ export default function App() {
         setHistory((prev) => [guestItem, ...prev]);
       }
     } catch (err) {
-      showToast(err.response?.data?.error || "Failed to generate explanation. Please try again.", "❌");
+      const errDetail = err.response?.data?.error || err.message;
+      if (err.response?.status === 429 || (errDetail && errDetail.includes("429"))) {
+        showToast("Gemini model limit reached. You can add a personal key in ⚙️ API Key.", "⚠️");
+      } else {
+        showToast(errDetail || "Failed to generate explanation. Please try again.", "❌");
+      }
     } finally {
       setLoading(false);
     }
@@ -835,6 +928,19 @@ export default function App() {
     }
   };
 
+  const handleSaveApiKey = (newKey) => {
+    setApiKey(newKey);
+    try {
+      if (newKey) {
+        localStorage.setItem("gemini_user_api_key", newKey);
+      } else {
+        localStorage.removeItem("gemini_user_api_key");
+      }
+    } catch {
+      // Ignored
+    }
+  };
+
   const userDisplayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || null;
 
   return (
@@ -865,6 +971,13 @@ export default function App() {
           </nav>
 
           <div className="header-actions">
+            <button
+              className="btn-ghost"
+              onClick={() => setSettingsModalOpen(true)}
+              title="Gemini API Key Settings"
+            >
+              ⚙️ API Key {apiKey && "•"}
+            </button>
             {currentUser ? (
               <>
                 <button className="btn-ghost" onClick={() => setHistoryModalOpen(true)}>
@@ -1083,6 +1196,15 @@ export default function App() {
         onSelectHistory={handleSelectHistory}
         onDeleteHistory={handleDeleteHistory}
         onClearHistory={handleClearHistory}
+      />
+
+      {/* API Key Settings Modal */}
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        apiKey={apiKey}
+        onSaveKey={handleSaveApiKey}
+        showToast={showToast}
       />
     </div>
   );
