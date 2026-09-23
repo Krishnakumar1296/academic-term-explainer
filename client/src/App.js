@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import "./App.css";
-import { auth } from "./firebase";
+import { auth, googleProvider } from "./firebase";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -120,14 +120,32 @@ function AuthModal({ isOpen, onClose, showToast }) {
     setLoading(true);
     setError("");
     try {
-      const provider = new GoogleAuthProvider();
+      const provider = googleProvider || new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       showToast("Signed in with Google!", "🚀");
       onClose();
     } catch (err) {
       console.error("Firebase Google Auth Error:", err);
-      if (err.code !== "auth/popup-closed-by-user") {
-        setError("Google Sign-In was cancelled or failed.");
+      if (err.code === "auth/popup-closed-by-user") {
+        // User closed popup without signing in
+        return;
+      }
+      if (err.code === "auth/operation-not-allowed") {
+        setError(
+          "Google Sign-In is not enabled yet in your Firebase Console. In Firebase Console, go to Authentication > Sign-in method, click Google, and enable it."
+        );
+      } else if (err.code === "auth/unauthorized-domain") {
+        setError(
+          "This domain is not authorized in your Firebase Console. Please add this domain under Authentication > Settings > Authorized domains."
+        );
+      } else if (err.code === "auth/popup-blocked") {
+        setError("Sign-in popup was blocked by your browser. Please allow popups for this site and try again.");
+      } else if (err.code === "auth/account-exists-with-different-credential") {
+        setError("An account already exists with the same email using a different login method.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Network error encountered during Google Sign-In. Please check your internet connection.");
+      } else {
+        setError(err.message || "Google Sign-In was cancelled or failed.");
       }
     } finally {
       setLoading(false);

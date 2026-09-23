@@ -25,6 +25,7 @@ jest.mock('jspdf', () => ({
 
 jest.mock('./firebase', () => ({
   auth: {},
+  googleProvider: {},
 }));
 
 jest.mock('firebase/auth', () => ({

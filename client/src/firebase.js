@@ -1,9 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// Prefer environment variables in production. For local dev you can copy these
-// values into a .env.local file in the client folder as REACT_APP_... entries.
+// Prefer environment variables in production and local development (.env / .env.local).
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyAbODQuKHsPXC3ZDhGrXxFhKqyX8ciEHQI",
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "vehicle-264ef.firebaseapp.com",
@@ -18,5 +17,9 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Configured Google Auth Provider
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
 
 export default app;
