@@ -36,6 +36,14 @@ In the **Environment Variables** section, add your Gemini API key:
 ### Step 5: Click Deploy
 Click **Deploy**. Vercel will build the React application and deploy the serverless API. Once finished, your application will be live at `https://your-project.vercel.app`!
 
+### Step 6: Authorize Your Deployed Domain in Firebase
+Google Sign-In requires your deployed domain to be whitelisted in Firebase:
+1. Open [Firebase Console](https://console.firebase.google.com/) and select your project.
+2. Go to **Authentication** > **Settings** tab.
+3. In the **Authorized domains** list, click **Add domain**.
+4. Enter your deployed domain (e.g., `academic-term-explainer.vercel.app` — without `https://`).
+5. Click **Add**. Google Sign-In will now work instantly on your live deployment!
+
 ---
 
 ## Method 2: Deploy via Vercel CLI

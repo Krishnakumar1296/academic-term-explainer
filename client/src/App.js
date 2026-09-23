@@ -135,8 +135,9 @@ function AuthModal({ isOpen, onClose, showToast }) {
           "Google Sign-In is not enabled yet in your Firebase Console. In Firebase Console, go to Authentication > Sign-in method, click Google, and enable it."
         );
       } else if (err.code === "auth/unauthorized-domain") {
+        const domain = window.location.hostname;
         setError(
-          "This domain is not authorized in your Firebase Console. Please add this domain under Authentication > Settings > Authorized domains."
+          `Domain "${domain}" is not authorized in Firebase Console. Go to Firebase Console > Authentication > Settings > Authorized domains, click "Add domain", and enter "${domain}".`
         );
       } else if (err.code === "auth/popup-blocked") {
         setError("Sign-in popup was blocked by your browser. Please allow popups for this site and try again.");
